@@ -1,44 +1,51 @@
+import hudson.tasks.Maven.MavenInstallation
+import hudson.tools.ZipExtractionInstaller
+import hudson.tools.InstallSourceProperty
+import hudson.model.JDK
+import hudson.plugins.sonar.SonarInstallation
+import hudson.plugins.gradle.GradleInstallation
+import jenkins.plugins.nodejs.tools.NodeJSInstallation
+import hudson.plugins.sonar.SonarGlobalConfiguration
+
 def instance = jenkins.model.Jenkins.instance
 
 JAVA: {
-  def javaInstallations = []
+  def installations = []
 
   {% for item in jenkins_tools_config %}
     {% if item.type == 'java' %}
       println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.home }}")
-      javaInstallations.add(new hudson.model.JDK("{{ item.name}}", "{{ item.home }}", null));
+      installations.add(new JDK("{{ item.name}}", "{{ item.home }}", null));
     {% endif %}
   {% endfor %}
 
-  def jdkDescriptor = new hudson.model.JDK.DescriptorImpl()
-  jdkDescriptor.setInstallations(javaInstallations.toArray(new hudson.model.JDK[0]));
+  def descriptor = new JDK.DescriptorImpl()
+  descriptor.setInstallations(installations.toArray(new JDK[0]));
 }
 
 MAVEN: {
-  def mavenInstallations = []
+  def installations = []
 
   {% for item in jenkins_tools_config %}
     {% if item.type == 'maven' %}
       println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
-      def installer = new hudson.tools.ZipExtractionInstaller("", "{{ item.url }}", "")
-      def installerSourceProperty = new hudson.tools.InstallSourceProperty([installer])
-      mavenInstallations.add(new hudson.tasks.Maven.MavenInstallation("{{ item.name }}", "", [installerSourceProperty]))
+      def installer = new ZipExtractionInstaller("", "{{ item.url }}", "{{ item.subdirectory }}")
+      installations.add(new MavenInstallation("{{ item.name }}", "", [new InstallSourceProperty([installer])]))
     {% endif %}
   {% endfor %}
 
-  def mavenDescriptor = instance.getExtensionList(hudson.tasks.Maven.DescriptorImpl.class)[0]
-  mavenDescriptor.setInstallations(mavenInstallations.toArray(new hudson.tasks.Maven.MavenInstallation[0]))
-  mavenDescriptor.save()
+  def descriptor = instance.getDescriptor(MavenInstallation)
+  descriptor.setInstallations(installations.toArray(new MavenInstallation[0]))
 }
 
 SONAR: {
   // See: https://github.com/SonarSource/sonar-scanner-jenkins
-  def sonarInstallations = []
+  def installations = []
 
   {% for item in jenkins_tools_config %}
     {% if item.type == 'sonar' %}
       println("Adding {{ item.type }} instance {{ item.name }} to the url {{ item.url }}")
-      sonarInstallations.add(new hudson.plugins.sonar.SonarInstallation(
+      installations.add(new SonarInstallation(
               "{{ item.name }}",          // name
               "{{ item.url }}",           // serverUrl
               "{{ item.version }}",       // serverVersion
@@ -55,41 +62,38 @@ SONAR: {
     {% endif %}
   {% endfor %}
 
-  def sonarGlobalConfiguration = instance.getDescriptor(hudson.plugins.sonar.SonarGlobalConfiguration.class)
-  sonarGlobalConfiguration.setInstallations(sonarInstallations.toArray(new hudson.plugins.sonar.SonarInstallation[0]))
-  sonarGlobalConfiguration.save()
+  def descriptor = instance.getDescriptor(SonarGlobalConfiguration)
+  descriptor.setInstallations(installations.toArray(new SonarInstallation[0]))
 }
 
-//GRADLE: {
-//  def gradleInstallations = []
-//
-//  {% for item in jenkins_tools_config %}
-//    {% if item.type == 'gradle' %}
-//      println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
-//      def installer = new hudson.tools.ZipExtractionInstaller("", "{{ item.url }}", "")
-//      def installerSourceProperty = new hudson.tools.InstallSourceProperty([installer])
-//      gradleInstallations.add(new hudson.plugins.gradle.GradleInstallation("{{ item.name }}", "", [installerSourceProperty]));
-//    {% endif %}
-//  {% endfor %}
-//
-//  def gradleDescriptor = instance.getExtensionList(hudson.plugins.gradle.GradleInstallation.DescriptorImpl.class)
-//  gradleDescriptor.setInstallations(gradleInstallations.toArray(new hudson.plugins.gradle.GradleInstallation[0]))
-//  gradleDescriptor.save()
-//}
+GRADLE: {
+  def installations = []
 
-//NODEJS: {
-//  def nodejsInstallations = []
-//
-//  {% for item in jenkins_tools_config %}
-//    {% if item.type == 'nodejs' %}
-//      println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
-//      def installer = new hudson.tools.ZipExtractionInstaller("", "{{ item.url }}", "")
-//      def installerSourceProperty = new hudson.tools.InstallSourceProperty([installer])
-//      nodejsInstallations.add(new hudson.plugins.nodejs.tools.NodeJSInstaller("{{ item.name }}", "", [installerSourceProperty]));
-//    {% endif %}
-//  {% endfor %}
-//
-//  def nodejsDescriptor = instance.getExtensionList(hudson.plugins.gradle.GradleInstallation.DescriptorImpl.class)
-//  nodejsDescriptor.setInstallations(gradleInstallations.toArray(new hudson.plugins.gradle.GradleInstallation[0]))
-//  nodejsDescriptor.save()
-//}
+  {% for item in jenkins_tools_config %}
+    {% if item.type == 'gradle' %}
+      println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
+      def installer = new ZipExtractionInstaller("", "{{ item.url }}", "")
+      def installerSourceProperty = new InstallSourceProperty([installer])
+      installations.add(new GradleInstallation("{{ item.name }}", "", [installerSourceProperty]));
+    {% endif %}
+  {% endfor %}
+
+  def descriptor = instance.getDescriptor(GradleInstallation)
+  descriptor.setInstallations(installations.toArray(new GradleInstallation[0]))
+}
+
+NODEJS: {
+  def installations = []
+
+  {% for item in jenkins_tools_config %}
+    {% if item.type == 'nodejs' %}
+      println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
+      def installer = new ZipExtractionInstaller("", "{{ item.url }}", "{{ item.subdirectory }}")
+      def installerSourceProperty = new InstallSourceProperty([installer])
+      installations.add(new NodeJSInstallation("{{ item.name }}", "", [installerSourceProperty]));
+    {% endif %}
+  {% endfor %}
+
+  def descriptor = instance.getDescriptor(NodeJSInstallation)
+  descriptor.setInstallations(installations.toArray(new NodeJSInstallation[0]))
+}

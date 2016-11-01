@@ -5,14 +5,12 @@ jenkins_repo_key_url: "{{jenkins_redhat_url}}/jenkins.io.key"
 jenkins_http_port: 9000
 jenkins_prefix_value: jenkins
 jenkins_args: "--prefix=/{{ jenkins_prefix_value }}"
-# The first two properties -Djava.awt.headless=true -Djenkins.install.runSetupWizard=false where there by default, just appending the rest
 jenkins_java_options: "-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false -Dhudson.model.ParametersAction.keepUndefinedParameters=true"
 jenkins_getting_ready_message: "Please wait "
 
 jenkins_url: "http://localhost:{{ jenkins_http_port }}/{{ jenkins_prefix_value }}"
 jenkins_cli_jar: "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar"
 jenkins_cli_cmd: "java -jar {{ jenkins_cli_jar }} -s {{ jenkins_url }}"
-# java -jar "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" -s "http://localhost:9000/jenkins" get-job Andy_Build1
 
 # These are the "Core" list of plugins that the framework requires, and additional project-specific values
 # should be set in the "jenkins_plugins_required section
@@ -30,8 +28,11 @@ jenkins_plugins_core_required:
 jenkins_plugins_required: []
 
 jenkins_tools_config:
-  - { type: "maven", name: "apache-maven-3", url: "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip" }
+  - { type: "maven", name: "apache-maven-3", url: "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip", subdirectory: "apache-maven-3.3.9" }
   - { type: "sonar", name: "sonar-server", url: "http://sonar:9000/sonar", version: "5.3" }
-  - { type: "java", name: "jdk1.8.0", home: "/usr/java/jdk1.8.0_112" }
+  - { type: "java", name: "jdk-1.8", home: "/usr/java/jdk1.8.0_112" }
+  - { type: "nodejs", name: "nodejs-7", url: "https://nodejs.org/dist/v7.0.0/node-v7.0.0-linux-x64.tar.gz", subdirectory: "node-v7.0.0-linux-x64" }
 
-maven_version: 3.3.9
+
+# The first two properties -Djava.awt.headless=true -Djenkins.install.runSetupWizard=false where there by default, just appending the rest
+# java -jar "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" -s "http://localhost:9000/jenkins" get-job Andy_Build1
