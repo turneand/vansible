@@ -46,11 +46,6 @@
 - name: Check for presence of the plugin update file - to fix race condition where this may not be created yet, so plugin install fails
   wait_for: path=/var/lib/jenkins/updates/default.json
 
-- stat: path=/var/lib/jenkins/updates/default.json
-  register: default_json
-
-- debug: msg="/var/lib/jenkins/updates/default.json has size {{ default_json.stat.size }}"
-
 - name: List plugins
   shell: "{{ jenkins_cli_cmd }} list-plugins | cut -f 1 -d ' '"
   register: jenkins_plugins_installed

@@ -72,7 +72,7 @@ GRADLE: {
   {% for item in jenkins_tools_config %}
     {% if item.type == 'gradle' %}
       println("Adding {{ item.type }} instance {{ item.name }} from the url {{ item.url }}")
-      def installer = new ZipExtractionInstaller("", "{{ item.url }}", "")
+      def installer = new ZipExtractionInstaller("", "{{ item.url }}", "{{ item.subdirectory }}")
       def installerSourceProperty = new InstallSourceProperty([installer])
       installations.add(new GradleInstallation("{{ item.name }}", "", [installerSourceProperty]));
     {% endif %}
