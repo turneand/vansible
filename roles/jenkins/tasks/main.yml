@@ -43,8 +43,41 @@
   retries: 60
   delay: 1
 
-- name: Install Core jenkins plugins
-  shell: "{{ jenkins_cli_cmd }} install-plugin {{ jenkins_plugins_core_required|join(' ') }} {{ jenkins_plugins_required|join(' ') }} -deploy"
+- name: Check for presence of the plugin update file - to fix race condition where this may not be created yet, so plugin install fails
+  wait_for: path=/var/lib/jenkins/updates/default.json
+
+- stat: path=/var/lib/jenkins/updates/default.json
+  register: default_json
+
+- debug: msg="/var/lib/jenkins/updates/default.json has size {{ default_json.stat.size }}"
+
+- name: List plugins
+  shell: "{{ jenkins_cli_cmd }} list-plugins | cut -f 1 -d ' '"
+  register: jenkins_plugins_installed
+
+# Unfortunately jenkins plugin installation is flaky and will randomly fail on a regular basis
+# As such, we cannot easily utilise the live-deploy of plugins and passing all as a single
+# command-line job as on failure either of these can leave the jenkins instance in an invalid state.
+# But, we can also perform retries-at the individual plugin level to hopefully reduce the impact
+# of this happening
+- name: Install jenkins plugins
+  with_items: '{{ jenkins_plugins_core_required + jenkins_plugins_required }}'
+  shell: "{{ jenkins_cli_cmd }} install-plugin {{ item }}"
+  when: jenkins_plugins_installed.stdout.find('{{ item }}') == -1
+  register: jenkins_new_plugins_installed
+  until: jenkins_new_plugins_installed.stderr == false or jenkins_new_plugins_installed.stderr == ""
+  retries: "5"
+
+- name: Restart if any plugins installed or updated
+  service: name=jenkins state=restarted enabled=true
+  when: jenkins_new_plugins_installed.changed
+
+- name: Wait for Jenkins to be up and running
+  uri: url="{{ jenkins_url }}" return_content=yes
+  register: result
+  until: result.status == 200 and result.content.find(jenkins_getting_ready_message) == -1
+  retries: 60
+  delay: 1
 
 - name: Install/update the global tools configuration files
   template: src=jenkins-tools-setup.groovy.j2 dest=/tmp/jenkins-tools-setup.groovy
@@ -53,22 +86,3 @@
 - name: Install/update the global tools configuration on Jenkins instance
   shell: "{{ jenkins_cli_cmd }} groovy /tmp/jenkins-tools-setup.groovy"
   when: jenkins_tools_updated.changed
-
-
-
-
-# Now need to add the various environment setups for:
-#  java
-#  sonar
-#  maven
-#  gradle (?)
-
-# Set global MAVEN_OPTS to batch mode...
-
-#a=Jenkins.instance.getExtensionList(hudson.tasks.Maven.DescriptorImpl.class)[0];
-#b=(a.installations as List);
-#b.add(new hudson.tasks.Maven.MavenInstallation("MAVEN3", "/home/apache-maven-3", []));
-#a.installations=b
-#a.save()
-
-# http://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner+for+Jenkins
