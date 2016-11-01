@@ -1,0 +1,7 @@
+---
+maven_version: "3.3.9"
+maven_install_root: "/opt"
+maven_artifact: "apache-maven-{{ maven_version }}"
+maven_artifact_tar: "{{ maven_artifact }}-bin.tar.gz"
+maven_url: "http://mirror.vorboss.net/apache/maven/maven-3/{{ maven_version }}/binaries/{{ maven_artifact_tar }}"
+maven_checksum: "md5:516923b3955b6035ba6b0a5b031fbd8b"

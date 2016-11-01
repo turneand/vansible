@@ -1,0 +1,9 @@
+---
+sonar_rpm_url: http://downloads.sourceforge.net/project/sonar-pkg/rpm
+sonar_dir: /opt/sonar/
+
+sonar_application_port: 9000
+sonar_db_host: ""
+sonar_db_name: ""
+sonar_db_user: ""
+sonar_db_password: ""

@@ -1,0 +1,34 @@
+- name: Ensure dependencies are installed.
+  package:
+    name:
+      - libselinux-python
+
+- stat:
+    path: "/etc/profile.d/maven.sh"
+  register: maven_system_d_stat
+
+- stat:
+    path: "{{ maven_install_root }}/{{ maven_artifact_tar }}"
+  register: maven_artifact_tar_stat
+
+- stat:
+    path: "{{ maven_install_root }}/{{ maven_artifact }}"
+  register: maven_artifact_stat
+
+- name: Gets maven tarball
+  get_url:
+    url: "{{ maven_url }}"
+    checksum: "{{ maven_checksum }}"
+    dest: "{{ maven_install_root }}/{{ maven_artifact_tar }}"
+  when: maven_artifact_tar_stat.stat.exists == false
+
+- name: Extract maven
+  unarchive:
+    src: "{{ maven_install_root }}/{{ maven_artifact_tar }}"
+    dest: "{{ maven_install_root }}"
+    copy: no
+  register: extract_maven
+  when: maven_artifact_stat.stat.exists == false
+
+#- name: Create global symlink to our maven install
+#  file: src={{ maven_install_root }}/{{ maven_artifact }} dest={{ maven_install_root }}/apache-maven state=link

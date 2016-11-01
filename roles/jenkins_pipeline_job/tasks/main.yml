@@ -1,0 +1,20 @@
+- name: List jobs
+  shell: "{{ jenkins_cli_cmd }} list-jobs"
+  register: jenkins_jobs_installed
+
+- set_fact:
+    jenkins_jobs_installed_list: "{{ jenkins_jobs_installed.stdout.split('\n') }}"
+
+- name: Generate new {{ pipeline_name }} job xml
+  template: src=templates/new_project.xml.j2 dest=/tmp/jenkins_pipeline_job.xml
+
+- name: Install {{ pipeline_name }} job
+  shell: "{{ jenkins_cli_cmd }} create-job {{ pipeline_name }} < /tmp/jenkins_pipeline_job.xml"
+  when: pipeline_name not in jenkins_jobs_installed_list
+
+- name: Update {{ pipeline_name }} job
+  shell: "{{ jenkins_cli_cmd }} update-job {{ pipeline_name }} < /tmp/jenkins_pipeline_job.xml"
+  when: pipeline_name in jenkins_jobs_installed_list
+
+- name: Execute {{ pipeline_name }} job if first run or has since been any SCM updates
+  shell: "{{ jenkins_cli_cmd }} build {{ pipeline_name }} -c -w"
