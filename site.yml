@@ -1,0 +1,25 @@
+---
+# file: site.yml
+- hosts: sonar-db
+  become: yes
+  roles:
+    - { role: postgresql, db_name: "{{ sonar_db_name }}", db_user: "{{ sonar_db_user }}", db_password: "{{ sonar_db_password }}" }
+
+- hosts: sonar
+  become: yes
+  roles:
+    - { role: java8 }
+    - { role: sonar }
+
+- hosts: jenkins
+  become: yes
+  roles:
+    - { role: java8 }
+#    - { role: maven }
+    - { role: jenkins }
+    - { role: jenkins_pipeline_job, pipeline_name: "hello-world-pipeline", pipeline_git_url: "https://github.com/turneand/hello-world", pipeline_git_branch: "*/jenkins_test" }
+
+#      export ANSIBLE_HOST_KEY_CHECKING=False
+#      ansible all -m ping -i inventory --ask-pass --ask-sudo-pass -u centos
+#      ansible all -a "/bin/echo hello" -i inventory --ask-pass --ask-sudo-pass -u centos
+#      ansible-playbook site.yml -i inventory --ask-pass --ask-sudo-pass -u centos -v

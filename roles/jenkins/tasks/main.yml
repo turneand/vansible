@@ -1,0 +1,74 @@
+---
+- name: Ensure Jenkins repo is installed.
+  yum_repository:
+    name: jenkins
+    description: Jenkins
+    file: jenkins
+    baseurl: "{{ jenkins_redhat_url }}"
+    gpgcheck: yes
+    gpgkey: "{{ jenkins_repo_key_url }}"
+
+- name: Ensure dependencies are installed.
+  package:
+    name:
+      - libselinux-python
+      - jenkins
+      - git
+    state: installed
+  register: jenkins_dependencies_updated
+
+- name: update configuration
+  lineinfile:
+    dest: "/etc/sysconfig/jenkins"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^JENKINS_PORT=', line: 'JENKINS_PORT="{{jenkins_http_port}}"' }
+    - { regexp: '^JENKINS_ARGS=', line: 'JENKINS_ARGS="{{jenkins_args}}"' }
+    - { regexp: "^JENKINS_JAVA_OPTIONS=", line: 'JENKINS_JAVA_OPTIONS="{{jenkins_java_options}}"' }
+  register: jenkins_config_updated
+
+- name: Ensure jenkins is definitely running
+  service: name=jenkins state=started enabled=true
+  register: jenkins_first_start
+
+- name: Restart if config or dependencies updated and not first run
+  service: name=jenkins state=restarted enabled=true
+  when: jenkins_first_start.changed == false and (jenkins_config_updated.changed or jenkins_dependencies_updated.changed)
+
+- name: Wait for Jenkins to be up and running
+  uri: url="{{ jenkins_url }}" return_content=yes
+  register: result
+  until: result.status == 200 and result.content.find(jenkins_getting_ready_message) == -1
+  retries: 60
+  delay: 1
+
+- name: Install Core jenkins plugins
+  shell: "{{ jenkins_cli_cmd }} install-plugin {{ jenkins_plugins_core_required|join(' ') }} {{ jenkins_plugins_required|join(' ') }} -deploy"
+
+- name: Install/update the global tools configuration files
+  template: src=jenkins-tools-setup.groovy.j2 dest=/tmp/jenkins-tools-setup.groovy
+  register: jenkins_tools_updated
+
+- name: Install/update the global tools configuration on Jenkins instance
+  shell: "{{ jenkins_cli_cmd }} groovy /tmp/jenkins-tools-setup.groovy"
+  when: jenkins_tools_updated.changed
+
+
+
+
+# Now need to add the various environment setups for:
+#  java
+#  sonar
+#  maven
+#  gradle (?)
+
+# Set global MAVEN_OPTS to batch mode...
+
+#a=Jenkins.instance.getExtensionList(hudson.tasks.Maven.DescriptorImpl.class)[0];
+#b=(a.installations as List);
+#b.add(new hudson.tasks.Maven.MavenInstallation("MAVEN3", "/home/apache-maven-3", []));
+#a.installations=b
+#a.save()
+
+# http://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner+for+Jenkins

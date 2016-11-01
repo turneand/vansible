@@ -1,0 +1,2 @@
+download_url: http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.rpm
+download_dest: /opt/java8.rpm

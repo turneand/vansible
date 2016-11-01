@@ -1,0 +1,8 @@
+- name: download java from {{download_url}} to {{download_dest}}
+  get_url:
+    url: "{{download_url}}"
+    dest: "{{download_dest}}"
+    headers: "Cookie:oraclelicense=accept-securebackup-cookie"
+
+- name: install java from {{download_dest}}
+  yum: name={{download_dest}} state=installed

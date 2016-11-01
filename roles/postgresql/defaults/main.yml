@@ -1,0 +1,12 @@
+---
+postgresql_rpm_url: https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64
+postgresql_package: postgresql96-server
+postgresql_service: postgresql-9.6.service
+postgresql_setup_script: /usr/pgsql-9.6/bin/postgresql96-setup
+postgresql_install_dir: /var/lib/pgsql/9.6
+
+db_name: ""
+db_user: ""
+db_password: ""
+
+

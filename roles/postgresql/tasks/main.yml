@@ -1,0 +1,78 @@
+# https://wiki.postgresql.org/wiki/YUM_Installation
+- name: Update base yum repo to ignore the postgresql instance
+  ini_file: dest=/etc/yum.repos.d/CentOS-Base.repo
+            section=base
+            option=exclude
+            value=postgresql*
+            no_extra_spaces=yes
+
+- name: Update base yum repo to ignore the postgresql instance
+  ini_file: dest=/etc/yum.repos.d/CentOS-Base.repo
+            section=updates
+            option=exclude
+            value=postgresql*
+            no_extra_spaces=yes
+
+- name: Ensure repo is installed.
+  yum_repository:
+    name: postgresql
+    description: Postgresql
+    file: postgresql
+    baseurl: "{{ postgresql_rpm_url }}"
+    gpgcheck: no
+
+- name: Ensure dependencies are installed.
+  package:
+    name:
+      - "{{ postgresql_package }}"
+      - python-psycopg2
+    state: installed
+  register: postgresql_dependencies_updated
+
+- name: Check if db previously init'd
+  stat: path={{postgresql_install_dir}}/data/postgresql.conf
+  register: check_conf
+
+- name: Initiate database
+  shell: "{{ postgresql_setup_script }} initdb"
+  when: check_conf.stat.exists == false
+
+- name: Allow connection within our network 1.
+  lineinfile:
+    dest: "{{ postgresql_install_dir }}/data/postgresql.conf"
+    line: "listen_addresses='*'"
+  register: postgresql_config_updated1
+
+- name: Allow connection within our network 2.
+  lineinfile:
+    dest: "{{ postgresql_install_dir }}/data/pg_hba.conf"
+    line: "host    all             all             192.168.50.0/24                 md5"
+  register: postgresql_config_updated2
+
+- name: Ensure the PostgreSQL service is running
+  service: name={{ postgresql_service }} state=started enabled=yes
+  register: postgresql_first_start
+
+- name: Restart if config or dependencies updated and not first run
+  service: name=sonar state=restarted enabled=true
+  when: postgresql_first_start.changed == false and (postgresql_config_updated1.changed or postgresql_config_updated2.changed)
+
+#
+# Now attempt to create the required database and user...
+#
+
+- name: ensure database is created
+  postgresql_db: name={{db_name}}
+  become_user: postgres
+
+- name: ensure user has access to database
+  postgresql_user: db={{db_name}} name={{db_user}} password={{db_password}} priv=ALL
+  become_user: postgres
+
+- name: ensure user does not have unnecessary privilege
+  postgresql_user: name={{db_user}} role_attr_flags=NOSUPERUSER,NOCREATEDB
+  become_user: postgres
+
+- name: ensure no other user can access the database
+  postgresql_privs: db={{db_name}} role=PUBLIC type=database priv=ALL state=absent
+  become_user: postgres
