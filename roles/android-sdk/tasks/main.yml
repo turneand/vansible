@@ -1,0 +1,17 @@
+- name: download sdk from {{download_url}} to {{download_dest}}
+  get_url:
+    url: "{{ android_sdk_download_url }}"
+    dest: "{{ android_sdk_download_dest }}"
+    checksum: "{{ android_sdk_download_checksum }}"
+
+- name: Un-archive the downloaded sdk
+  unarchive:
+    src: "{{ android_sdk_download_dest }}"
+    dest: "/opt"
+    copy: "no"
+    creates: /opt/android-sdk-linux
+
+- name: Install Android SDKs
+  shell: echo y | /opt/android-sdk-linux/tools/android update sdk -u -t "{{ android_sdk_required|join(',') }}"
+#  shell: echo y | /opt/android-sdk-linux/tools/android update sdk -u -t "{{ item }}"
+#  with_items: "{{ android_sdk_required }}"
