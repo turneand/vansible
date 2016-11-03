@@ -15,24 +15,42 @@ jenkins_cli_cmd: "java -jar {{ jenkins_cli_jar }} -s {{ jenkins_url }}"
 # These are the "Core" list of plugins that the framework requires, and additional project-specific values
 # should be set in the "jenkins_plugins_required section
 jenkins_plugins_core_required:
+  - display-url-api
+  - icon-shim
   - git
   - workflow-aggregator
-  - sonar
-  - rebuild
   - greenballs
   - nodejs
   - maven-plugin
   - gradle
+  - sonar
+#  - rebuild
+#  - android-emulator
 
 # Any additional plugins required to be installed into Jenkins that are project-specific
 jenkins_plugins_required: []
 
+jenkins_tool_java_name: "jdk-1.8"
+jenkins_tool_java_home: "/usr/java/jdk1.8.0_112"
+jenkins_tool_maven_name: apache-maven-3
+jenkins_tool_maven_url: "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip"
+jenkins_tool_maven_subdirectory: "apache-maven-3.3.9"
+jenkins_tool_sonar_name: "sonar-server"
+jenkins_tool_sonar_url: "http://sonar:9000/sonar"
+jenkins_tool_sonar_version: "5.3"
+jenkins_tool_nodejs_name: "nodejs-7"
+jenkins_tool_nodejs_url: "https://nodejs.org/dist/v7.0.0/node-v7.0.0-linux-x64.tar.gz"
+jenkins_tool_nodejs_subdirectory: "node-v7.0.0-linux-x64"
+jenkins_tool_gradle_name: "gradle-3"
+jenkins_tool_gradle_url: "https://services.gradle.org/distributions/gradle-3.1-bin.zip"
+jenkins_tool_gradle_subdirectory: "gradle-3.1"
+
 jenkins_tools_config:
-  - { type: "maven", name: "apache-maven-3", url: "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip", subdirectory: "apache-maven-3.3.9" }
-  - { type: "sonar", name: "sonar-server", url: "http://sonar:9000/sonar", version: "5.3" }
-  - { type: "java", name: "jdk-1.8", home: "/usr/java/jdk1.8.0_112" }
-  - { type: "nodejs", name: "nodejs-7", url: "https://nodejs.org/dist/v7.0.0/node-v7.0.0-linux-x64.tar.gz", subdirectory: "node-v7.0.0-linux-x64" }
-  - { type: "gradle", name: "gradle-3", url: "https://services.gradle.org/distributions/gradle-3.1-bin.zip", subdirectory: "gradle-3.1" }
+  - { type: "java", name: "{{ jenkins_tool_java_name }}", home: "{{ jenkins_tool_java_home }}" }
+  - { type: "maven", name: "{{ jenkins_tool_maven_name }}", url: "{{ jenkins_tool_maven_url }}", subdirectory: "{{ jenkins_tool_maven_subdirectory }}" }
+  - { type: "sonar", name: "{{ jenkins_tool_sonar_name }}", url: "{{ jenkins_tool_sonar_url }}", version: "{{ jenkins_tool_sonar_version }}" }
+  - { type: "nodejs", name: "{{ jenkins_tool_nodejs_name }}", url: "{{ jenkins_tool_nodejs_url }}", subdirectory: "{{ jenkins_tool_nodejs_subdirectory }}" }
+  - { type: "gradle", name: "{{ jenkins_tool_gradle_name }}", url: "{{ jenkins_tool_gradle_url }}", subdirectory: "{{ jenkins_tool_gradle_subdirectory }}" }
 
 # The first two properties -Djava.awt.headless=true -Djenkins.install.runSetupWizard=false where there by default, just appending the rest
 # java -jar "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" -s "http://localhost:9000/jenkins" get-job Andy_Build1
