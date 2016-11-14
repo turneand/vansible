@@ -9,7 +9,7 @@
 - name: Ensure dependencies are installed.
   package:
     name:
-      - sonar
+      - sonar-{{ sonar_version }}
     state: installed
   register: sonar_dependencies_updated
 
@@ -20,17 +20,19 @@
     line: "{{ item.line }}"
   with_items:
     - { regexp: "^#?sonar.web.port=", line: "sonar.web.port={{ sonar_application_port }}" }
-    - { regexp: "^#?sonar.jdbc.url=jdbc:postgresql", line: "sonar.jdbc.url=jdbc:postgresql://{{ sonar_db_host }}/{{ sonar_db_name }}" }
+    - { regexp: "^#?sonar.search.port=", line: "sonar.search.port={{ sonar_search_port }}" }
+    - { regexp: "^#?sonar.jdbc.url=jdbc:postgresql", line: "sonar.jdbc.url={{ sonar_db_url }}" }
     - { regexp: "^#?sonar.jdbc.username=", line: "sonar.jdbc.username={{ sonar_db_user }}" }
     - { regexp: "^#?sonar.jdbc.password=", line: "sonar.jdbc.password={{ sonar_db_password }}" }
-    - { regexp: "^#?sonar.web.context=", line: "sonar.web.context=/sonar" }
+    - { regexp: "^#?sonar.web.context=", line: "sonar.web.context=/{{ sonar_web_context }}" }
   register: sonar_config_updated
 
-#- name: download and install the javascript plugin
-#  get_url:
-#      url: https://sonarsource.bintray.com/Distribution/sonar-javascript-plugin/sonar-javascript-plugin-2.17.0.3154.jar
-#      dest: "{{ sonar_dir }}/extensions/plugins"
-#  register: sonar_plugin_download
+- name: Download and install sonar plugins
+  get_url:
+    url="{{ item }}"
+    dest="{{ sonar_dir }}/extensions/plugins"
+  with_items: "{{ sonar_plugins }}"
+  register: sonar_plugins_updated
 
 - name: Ensure sonar is definitely running
   service: name=sonar state=started enabled=true
@@ -38,4 +40,11 @@
 
 - name: Restart if config or dependencies updated and not first run
   service: name=sonar state=restarted enabled=true
-  when: sonar_first_start.changed == false and (sonar_config_updated.changed or sonar_dependencies_updated.changed)
+  when: sonar_first_start.changed == false and (sonar_config_updated.changed or sonar_dependencies_updated.changed or sonar_plugins_updated.changed)
+
+- name: Wait for Sonar to be up and running
+  uri: url="{{ sonar_url }}"
+  register: result
+  until: result.status == 200
+  retries: 120
+  delay: 1

@@ -15,6 +15,7 @@ Vagrant.configure("2") do |config|
     provider.memory = 1024
     provider.cpus = 1
     provider.linked_clone = true
+    provider.customize [ "guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 1000 ]
   end
 
   config.vm.define "sonar-db" do |db|
@@ -24,13 +25,18 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "sonar" do |sonar|
     sonar.vm.hostname = "sonar"
-    sonar.vm.network :private_network, ip: "192.168.50.11"
+    sonar.vm.network :private_network, ip: "192.168.50.15"
     sonar.vm.network "forwarded_port", guest: 9000, host: 9001
+  end
+
+  config.vm.define "jenkins-slave" do |slave|
+    slave.vm.hostname = "jenkins-slave"
+    slave.vm.network :private_network, ip: "192.168.50.20"
   end
 
   config.vm.define "jenkins" do |jenkins|
     jenkins.vm.hostname = "jenkins-vagrant"
-    jenkins.vm.network :private_network, ip: "192.168.50.12"
+    jenkins.vm.network :private_network, ip: "192.168.50.25"
     jenkins.vm.network "forwarded_port", guest: 9000, host: 9000
 
     # Run Ansible from the Vagrant Host

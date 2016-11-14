@@ -15,17 +15,15 @@ jenkins_cli_cmd: "java -jar {{ jenkins_cli_jar }} -s {{ jenkins_url }}"
 # These are the "Core" list of plugins that the framework requires, and additional project-specific values
 # should be set in the "jenkins_plugins_required section
 jenkins_plugins_core_required:
-  - display-url-api
-  - icon-shim
   - git
   - workflow-aggregator
   - greenballs
-  - nodejs
-  - maven-plugin
-  - gradle
+#  - nodejs
+#  - maven-plugin
+#  - gradle
   - sonar
-#  - rebuild
-#  - android-emulator
+  - ssh-slaves
+  - android-lint
 
 # Any additional plugins required to be installed into Jenkins that are project-specific
 jenkins_plugins_required: []
@@ -47,10 +45,8 @@ jenkins_tool_gradle_subdirectory: "gradle-3.1"
 
 jenkins_tools_config:
   - { type: "java", name: "{{ jenkins_tool_java_name }}", home: "{{ jenkins_tool_java_home }}" }
-  - { type: "maven", name: "{{ jenkins_tool_maven_name }}", url: "{{ jenkins_tool_maven_url }}", subdirectory: "{{ jenkins_tool_maven_subdirectory }}" }
+#  - { type: "maven", name: "{{ jenkins_tool_maven_name }}", url: "{{ jenkins_tool_maven_url }}", subdirectory: "{{ jenkins_tool_maven_subdirectory }}" }
   - { type: "sonar", name: "{{ jenkins_tool_sonar_name }}", url: "{{ jenkins_tool_sonar_url }}", version: "{{ jenkins_tool_sonar_version }}" }
-  - { type: "nodejs", name: "{{ jenkins_tool_nodejs_name }}", url: "{{ jenkins_tool_nodejs_url }}", subdirectory: "{{ jenkins_tool_nodejs_subdirectory }}" }
-  - { type: "gradle", name: "{{ jenkins_tool_gradle_name }}", url: "{{ jenkins_tool_gradle_url }}", subdirectory: "{{ jenkins_tool_gradle_subdirectory }}" }
-
-# The first two properties -Djava.awt.headless=true -Djenkins.install.runSetupWizard=false where there by default, just appending the rest
-# java -jar "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" -s "http://localhost:9000/jenkins" get-job Andy_Build1
+#  - { type: "nodejs", name: "{{ jenkins_tool_nodejs_name }}", url: "{{ jenkins_tool_nodejs_url }}", subdirectory: "{{ jenkins_tool_nodejs_subdirectory }}" }
+#  - { type: "gradle", name: "{{ jenkins_tool_gradle_name }}", url: "{{ jenkins_tool_gradle_url }}", subdirectory: "{{ jenkins_tool_gradle_subdirectory }}" }
+  - { type: "slave", name: "slave1", host: "jenkins-slave", label: "android" }

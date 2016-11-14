@@ -1,0 +1,26 @@
+---
+# Now attempt to extract the plugin name from all *.tmp files that failed the download/install:
+- find: paths="/var/lib/jenkins/plugins/" patterns="*.tmp"
+  register: jenkins_new_plugins_need_fixing
+
+- set_fact:
+    jenkins_plugins_to_fix: "{{ jenkins_new_plugins_need_fixing.files | map(attribute='path') | map('basename') | map('splitext') | map('first') | map('splitext') | map('first') | list }}"
+
+- name: Fix any broken plugin installs
+  shell: "{{ jenkins_cli_cmd }} install-plugin {{ jenkins_plugins_to_fix | join(' ') }}"
+  when: jenkins_plugins_to_fix | length > 0
+  register: jenkins_new_plugins_installed
+  until: jenkins_new_plugins_installed.stderr == false or jenkins_new_plugins_installed.stderr == ""
+  retries: "5"
+
+- name: Restart if any plugins install was fixed - to ensure all plugins are reloaded correctly
+  service: name=jenkins state=restarted enabled=true
+  when: jenkins_plugins_to_fix | length > 0
+
+- name: Wait for Jenkins to be up and running
+  uri: url="{{ jenkins_url }}" return_content=yes
+  register: result
+  when: jenkins_plugins_to_fix | length > 0
+  until: result.status == 200 and result.content.find(jenkins_getting_ready_message) == -1
+  retries: 60
+  delay: 1
