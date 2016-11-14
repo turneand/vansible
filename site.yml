@@ -1,5 +1,4 @@
 ---
-# file: site.yml
 - hosts: sonar-db
   become: yes
   roles:
@@ -15,12 +14,12 @@
   become: yes
   roles:
     - { role: java8 }
-#    - { role: maven }
-    - { role: android-sdk }
+#    - { role: android-sdk }
     - { role: jenkins }
-    - { role: jenkins_pipeline_job, pipeline_name: "hello-world-pipeline", pipeline_git_url: "https://github.com/turneand/hello-world", pipeline_git_branch: "*/jenkins_test" }
+    - { role: jenkins-job, pipeline_name: "hello-world-pipeline", pipeline_git_url: "https://github.com/turneand/hello-world", pipeline_git_branch: "*/jenkins_test" }
 
-#      export ANSIBLE_HOST_KEY_CHECKING=False
-#      ansible all -m ping -i inventory --ask-pass --ask-sudo-pass -u centos
-#      ansible all -a "/bin/echo hello" -i inventory --ask-pass --ask-sudo-pass -u centos
-#      ansible-playbook site.yml -i inventory --ask-pass --ask-sudo-pass -u centos -v
+- hosts: jenkins-slave
+  become: yes
+  roles:
+    - { role: java8 }
+    - { role: jenkins-slave }

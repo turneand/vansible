@@ -1,11 +1,24 @@
-import hudson.tasks.Maven.MavenInstallation
+//import hudson.tasks.Maven.MavenInstallation
 import hudson.tools.ZipExtractionInstaller
 import hudson.tools.InstallSourceProperty
 import hudson.model.JDK
 import hudson.plugins.sonar.SonarInstallation
-import hudson.plugins.gradle.GradleInstallation
-import jenkins.plugins.nodejs.tools.NodeJSInstallation
+//import hudson.plugins.gradle.GradleInstallation
+//import jenkins.plugins.nodejs.tools.NodeJSInstallation
 import hudson.plugins.sonar.SonarGlobalConfiguration
+
+
+import jenkins.*
+import hudson.*
+import hudson.slaves.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.*
+import hudson.plugins.sshslaves.*;
+import hudson.model.*
+import jenkins.model.*
+import hudson.security.*
 
 def instance = jenkins.model.Jenkins.instance
 
@@ -22,7 +35,7 @@ JAVA: {
   def descriptor = new JDK.DescriptorImpl()
   descriptor.setInstallations(installations.toArray(new JDK[0]));
 }
-
+/*
 MAVEN: {
   def installations = []
 
@@ -37,7 +50,7 @@ MAVEN: {
   def descriptor = instance.getDescriptor(MavenInstallation)
   descriptor.setInstallations(installations.toArray(new MavenInstallation[0]))
 }
-
+*/
 SONAR: {
   // See: https://github.com/SonarSource/sonar-scanner-jenkins
   def installations = []
@@ -65,7 +78,7 @@ SONAR: {
   def descriptor = instance.getDescriptor(SonarGlobalConfiguration)
   descriptor.setInstallations(installations.toArray(new SonarInstallation[0]))
 }
-
+/*
 GRADLE: {
   def installations = []
 
@@ -96,4 +109,22 @@ NODEJS: {
 
   def descriptor = instance.getDescriptor(NodeJSInstallation)
   descriptor.setInstallations(installations.toArray(new NodeJSInstallation[0]))
+}
+*/
+
+CREDENTIALS: {
+  def systemCredentialsProvider = instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0];
+  def credentials = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "jenkins-slave-ssh", "jenkins-slave", new BasicSSHUserPrivateKey.UsersPrivateKeySource(), "", "")
+  systemCredentialsProvider.addCredentials(Domain.global(), credentials)
+}
+
+SLAVES: {
+  {% for item in jenkins_tools_config %}
+    {% if item.type == 'slave' %}
+      println("Adding {{ item.type }} instance {{ item.name }} for the host {{ item.host }}")
+      Slave slave = new DumbSlave("{{ item.name }}", "/var/lib/jenkins-slave", new SSHLauncher("{{ item.host }}", 22, "jenkins-slave-ssh","","","","", 180, 3, 30))
+      slave.setLabelString("{{ item.label }}")
+      instance.addNode(slave)
+    {% endif %}
+  {% endfor %}
 }

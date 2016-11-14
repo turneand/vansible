@@ -1,0 +1,15 @@
+---
+- name: Ensure dependencies are installed.
+  package:
+    name:
+      - git
+    state: installed
+
+- name: Ensure jenkins user exists
+  user:
+    name: 'jenkins-slave'
+    home: '/var/lib/jenkins-slave'
+    state: present
+
+- name: Upload public key from jenkins master
+  authorized_key: user=jenkins-slave key="{{ lookup('file', '/tmp/jenkins_master_rsa.pub') }}"

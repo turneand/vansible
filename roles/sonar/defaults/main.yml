@@ -2,8 +2,19 @@
 sonar_rpm_url: http://downloads.sourceforge.net/project/sonar-pkg/rpm
 sonar_dir: /opt/sonar/
 
-sonar_application_port: 9000
 sonar_db_host: ""
 sonar_db_name: ""
 sonar_db_user: ""
 sonar_db_password: ""
+
+sonar_version: 4.5.7
+sonar_application_port: 9000
+sonar_search_port: 9051
+sonar_web_context: sonar
+sonar_url: "http://localhost:{{ sonar_application_port }}/{{ sonar_web_context }}"
+sonar_db_url: "jdbc:postgresql://{{ sonar_db_host }}/{{ sonar_db_name }}"
+
+sonar_plugins:
+#  - "https://sonarsource.bintray.com/Distribution/sonar-java-plugin/sonar-java-plugin-4.2.1.6971.jar"
+#  - "https://sonarsource.bintray.com/Distribution/sonar-javascript-plugin/sonar-javascript-plugin-2.17.0.3154.jar"
+  - "http://downloads.sonarsource.com/plugins/org/codehaus/sonar-plugins/android/sonar-android-plugin/1.1/sonar-android-plugin-1.1.jar"
