@@ -1,5 +1,6 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
+  config.vm.box_check_update = false
 
   # In order to use DNS resolution the https://github.com/devopsgroup-io/vagrant-hostmanager plugin must be installed:
   #    vagrant plugin install vagrant-hostmanager
@@ -16,6 +17,12 @@ Vagrant.configure("2") do |config|
     provider.cpus = 1
     provider.linked_clone = true
     provider.customize [ "guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 1000 ]
+  end
+
+  config.vm.define "nexus" do |nexus|
+    nexus.vm.hostname = "nexus"
+    nexus.vm.network :private_network, ip: "192.168.50.5"
+    nexus.vm.network "forwarded_port", guest: 8081, host: 9002
   end
 
   config.vm.define "sonar-db" do |db|

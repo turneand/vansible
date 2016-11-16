@@ -1,0 +1,7 @@
+nexus_tarball_src: https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.1.0-04-unix.tar.gz
+nexus_tarball_dest: /opt/nexus/nexus-3.1.0-04-unix.tar.gz
+nexus_install_root: /opt/nexus
+nexus_install_latest: "{{ nexus_install_root }}/latest"
+nexus_install_current: "{{ nexus_install_root }}/nexus-3.1.0-04"
+nexus_work_folder: "{{ nexus_install_root }}/sonatype-work"
+nexus_user: nexus

@@ -1,0 +1,52 @@
+---
+- name: create "nexus" group
+  group: name=nexus state=present
+
+- name: create "nexus" user
+  user: name=nexus group=nexus state=present
+
+- name: create nexus install directory
+  file: path=/opt/nexus state=directory
+
+- name: download nexus
+  get_url:
+    url: "{{ nexus_tarball_src }}"
+    dest: "{{ nexus_tarball_dest }}"
+
+# Add an exclude of the sonatype-work folder if already present?
+- name: Extract nexus
+  unarchive:
+    src: "{{ nexus_tarball_dest }}"
+    dest: "{{ nexus_install_root }}"
+    creates: "{{ nexus_install_current }}"
+    copy: "no"
+
+- name: make {{ nexus_install_current }} directory property of nexus user/group
+  file: path={{ nexus_install_current }} group={{ nexus_user }} owner={{ nexus_user }} recurse=true
+
+- name: make {{ nexus_work_folder }} directory property of nexus user/group
+  file: path={{ nexus_work_folder }} group={{ nexus_user }} owner={{ nexus_user }} recurse=true
+
+- name: Create symlink
+  file: src={{ nexus_install_current }} dest={{ nexus_install_latest }} state=link
+
+#- name: update configuration
+#  lineinfile:
+#    dest: "{{ nexus_work_folder }}/nexus3/etc/nexus.properties"
+#    regexp: "{{ item.regexp }}"
+#    line: "{{ item.line }}"
+#  with_items:
+#    - { regexp: '^#? *application-port=', line: 'application-port={{ nexus_port }}' }
+
+- name: Install service
+  template: src=nexus.service.j2 dest=/etc/systemd/system/nexus.service
+
+- name: Ensure nexus is definitely running
+  service: name=nexus.service state=started enabled=true
+
+- name: Wait for nexus to be up and running
+  uri: url="http://localhost:8081"
+  register: result
+  until: result.status == 200
+  retries: 120
+  delay: 1

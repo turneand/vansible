@@ -34,6 +34,7 @@ JAVA: {
 
   def descriptor = new JDK.DescriptorImpl()
   descriptor.setInstallations(installations.toArray(new JDK[0]));
+  descriptor.save()
 }
 /*
 MAVEN: {
@@ -49,6 +50,7 @@ MAVEN: {
 
   def descriptor = instance.getDescriptor(MavenInstallation)
   descriptor.setInstallations(installations.toArray(new MavenInstallation[0]))
+  descriptor.save()
 }
 */
 SONAR: {
@@ -77,6 +79,7 @@ SONAR: {
 
   def descriptor = instance.getDescriptor(SonarGlobalConfiguration)
   descriptor.setInstallations(installations.toArray(new SonarInstallation[0]))
+  descriptor.save()
 }
 /*
 GRADLE: {
@@ -93,6 +96,7 @@ GRADLE: {
 
   def descriptor = instance.getDescriptor(GradleInstallation)
   descriptor.setInstallations(installations.toArray(new GradleInstallation[0]))
+  descriptor.save()
 }
 
 NODEJS: {
@@ -109,6 +113,7 @@ NODEJS: {
 
   def descriptor = instance.getDescriptor(NodeJSInstallation)
   descriptor.setInstallations(installations.toArray(new NodeJSInstallation[0]))
+  descriptor.save()
 }
 */
 
