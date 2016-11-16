@@ -1,4 +1,10 @@
 ---
+- hosts: nexus
+  become: yes
+  roles:
+    - { role: java8 }
+    - { role: nexus }
+
 - hosts: sonar-db
   become: yes
   roles:
