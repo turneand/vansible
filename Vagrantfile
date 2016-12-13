@@ -50,6 +50,7 @@ Vagrant.configure("2") do |config|
     jenkins.vm.provision "ansible" do |provision|
       provision.limit = "all"
       provision.playbook = "site.yml"
+
       provision.raw_arguments = [ "-v", "--extra-vars", "sonar_db_host=sonar-db sonar_db_name=sonarqube sonar_db_user=sonarqube sonar_db_password=PaSsW0rD" ]
 #      provision.raw_arguments = [ "-l", "sonar-db" ]
     end
